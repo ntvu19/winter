@@ -1,0 +1,19 @@
+apiVersion: skaffold/v4beta6
+kind: Config
+metadata:
+  name: backend
+build:
+  artifacts:
+    - image: file-manager
+      context: file-manager
+      jib:
+        project: vn.winter:file-manager
+    - image: user-center
+      context: user-center
+      jib:
+        project: vn.winter:user-center
+manifests:
+  rawYaml:
+    - .\k8s\file-manager-depl.yaml
+    - .\k8s\user-center-depl.yaml
+    - .\k8s\ingress-srv.yaml

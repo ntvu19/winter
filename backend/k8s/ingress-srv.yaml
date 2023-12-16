@@ -1,0 +1,30 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ingress-service
+  annotations:
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: "600m"
+    nginx.org/client-max-body-size: "600m"
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: local.kube
+      http:
+        paths:
+          # user center api
+          - path: /api/v1/user-center/?(.*)
+            pathType: Prefix
+            backend:
+              service:
+                name: user-center
+                port:
+                  number: 8080
+          # file manager service api
+          - path: /api/v1/file/?(.*)
+            pathType: Prefix
+            backend:
+              service:
+                name: file-manager
+                port:
+                  number: 8080

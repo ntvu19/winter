@@ -1,2 +1,9 @@
-# winter
-Winter - Cloud storage by NTV
+# Winter - The Cloud Storage
+
+## Backend - Spring
+
+## Frontend - Vue
+
+## Database - PostgreSQL
+
+
