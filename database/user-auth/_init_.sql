@@ -14,7 +14,7 @@ create table if not exists users(
 	full_name		varchar(40) not null,
 	email			varchar(50) not null,
 	"password"		varchar(500) not null,
-	salt			varchar(10) not null,
+	salt			varchar(30) not null,
 	phone			varchar(15) not null,
 	avatar_url		varchar(500),
 	is_blocked		boolean default false not null,

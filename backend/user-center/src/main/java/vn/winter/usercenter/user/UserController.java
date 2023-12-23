@@ -1,14 +1,35 @@
 package vn.winter.usercenter.user;
 
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import jakarta.validation.Valid;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import vn.winter.usercenter.user.dto.UserSignUpDto;
+
+import java.util.List;
 
 @RestController()
-@RequestMapping("api/v1/user-center")
+@RequestMapping("api/v1/user-center/user")
 public class UserController {
+    @Autowired
+    private final UserService userService;
+
+    public UserController(UserService userService) {
+        this.userService = userService;
+    }
+
+    @GetMapping("/")
+    public List<User> getAllUser() {
+        return this.userService.getAllUser();
+    }
+
+    @PostMapping("/sign-up")
+    public ResponseEntity<Object> signUp(@Valid @RequestBody UserSignUpDto userSignUpDto) {
+        return this.userService.signUp(userSignUpDto);
+    }
+
     @GetMapping("hello")
     public String hello() {
-        return "Hello Nguyen Thanh Vu";
+        return "Hello! Thanh Vu";
     }
 }
