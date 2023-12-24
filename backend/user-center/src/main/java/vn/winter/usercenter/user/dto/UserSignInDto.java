@@ -14,23 +14,13 @@ import java.io.Serializable;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserSignUpDto implements Serializable {
-    @NotBlank
-    private String fullName;
-
+public class UserSignInDto implements Serializable {
     @NotBlank
     @Email
     private String email;
 
     @NotBlank
     private String password;
-
-    @NotBlank
-    private String phone;
-
-    public void setFullName(String fullName) {
-        this.fullName = Util.trim(fullName);
-    }
 
     public void setEmail(String email) {
         this.email = Util.trim(email);
@@ -40,7 +30,4 @@ public class UserSignUpDto implements Serializable {
         this.password = Util.trim(password);
     }
 
-    public void setPhone(String phone) {
-        this.phone = Util.trim(phone);
-    }
 }

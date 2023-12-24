@@ -14,4 +14,12 @@ public class Util {
                 .collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append)
                 .toString();
     }
+
+    public static String trim(String str) {
+        if (str != null) {
+            return str.trim();
+        } else {
+            return null;
+        }
+    }
 }

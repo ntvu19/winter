@@ -22,8 +22,8 @@ public class UserMapper {
         dto.setAvatarUrl(user.getAvatarUrl());
         dto.setCreatedAt(user.getCreatedAt());
         dto.setUpdatedAt(user.getUpdatedAt());
-        dto.setDeleted(user.getDeletedStatus());
-        dto.setBlocked(user.getBlockedStatus());
+        dto.setDeleted(user.isDeleted());
+        dto.setBlocked(user.isBlocked());
 
         return dto;
     }

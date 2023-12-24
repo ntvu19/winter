@@ -6,6 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import vn.winter.usercenter.user.dto.UserSignInDto;
 import vn.winter.usercenter.user.dto.UserSignUpDto;
 import vn.winter.usercenter.util.ResponseMap;
 import vn.winter.usercenter.util.Util;
@@ -32,11 +33,12 @@ import java.util.List;
 
     public ResponseEntity<Object> signUp(UserSignUpDto userSignUpDto) {
 
-        /*
-         *  NOTE:
-         *  - OTP
-         *  - Active status
-         *  - Birthday
+        /**
+         * NOTE:
+         * - OTP
+         * - Active status
+         * - Birthday
+         * - 500 try - catch - exception
          */
 
         // Get request parameters
@@ -89,5 +91,62 @@ import java.util.List;
                 .setValue("status", HttpStatus.CREATED.value())
                 .build(),
                     HttpStatus.CREATED);
+    }
+
+    public ResponseEntity<Object> signIn(UserSignInDto userSignInDto) {
+
+        /**
+         * NOTE:
+         * - Check active user
+         * - Cache the token for Redis
+         * -
+         */
+
+        // Get email and password
+        String email = userSignInDto.getEmail();
+        String password = userSignInDto.getPassword();
+
+        // Check the email is blank
+        if (email == null || email.isBlank()) {
+            return new ResponseEntity<>(responseMap
+                    .setValue("message", "Email or password must not be empty!")
+                    .setValue("status", HttpStatus.BAD_REQUEST.value())
+                    .build(),
+                        HttpStatus.BAD_REQUEST);
+        }
+
+        // Check the email in database
+        User user = this.userRepository.findOneByEmail(email);
+
+        if (user == null) {
+            return new ResponseEntity<>(responseMap
+                    .setValue("message", "Email or password are wrong!")
+                    .setValue("status", HttpStatus.BAD_REQUEST.value())
+                    .build(),
+                        HttpStatus.BAD_REQUEST);
+        }
+
+        // Check password
+        String salt = user.getSalt();
+        String rawPassword = password + salt;
+        String encodedPassword = user.getPassword();
+
+        if (!passwordEncoder.matches(rawPassword, encodedPassword)) {
+            return new ResponseEntity<>(responseMap
+                    .setValue("message", "Email or password are wrong!")
+                    .setValue("status", HttpStatus.BAD_REQUEST.value())
+                    .build(),
+                        HttpStatus.BAD_REQUEST);
+        }
+
+        // Generate access token and refresh token (JWT)
+
+
+        return new ResponseEntity<>(responseMap
+                .setValue("message", "Success!")
+                .setValue("status", HttpStatus.OK.value())
+                .setValue("data", UserMapper.getInstance().toDTO(user))
+                .build(),
+                    HttpStatus.OK);
     }
 }

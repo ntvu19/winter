@@ -36,13 +36,4 @@ public class User {
     private Date updatedAt;
     @Column(name = "plan_id")
     private long planId;
-
-
-    public boolean getDeletedStatus() {
-        return this.isDeleted;
-    }
-
-    public boolean getBlockedStatus() {
-        return this.isBlocked;
-    }
 }
