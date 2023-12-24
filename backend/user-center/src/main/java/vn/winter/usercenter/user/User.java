@@ -2,8 +2,11 @@ package vn.winter.usercenter.user;
 
 import jakarta.persistence.*;
 import lombok.*;
+import vn.winter.usercenter.otp.OTP;
 
-import java.util.Date;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.Collection;
 
 @Entity
 @Table(name = "users")
@@ -24,16 +27,24 @@ public class User {
     private String password;
     private String salt;
     private String phone;
+    private LocalDate birthday;
     @Column(name = "avatar_url")
     private String avatarUrl;
     @Column(name = "is_blocked")
     private boolean isBlocked;
     @Column(name = "is_deleted")
     private boolean isDeleted;
+    @Column(name = "is_active")
+    private boolean isActive;
     @Column(name = "created_at", columnDefinition = "timestamptz default now()")
-    private Date createdAt;
+    private LocalDateTime createdAt;
     @Column(name = "updated_at", columnDefinition = "timestamptz default now()")
-    private Date updatedAt;
+    private LocalDateTime updatedAt;
     @Column(name = "plan_id")
     private long planId;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    @EqualsAndHashCode.Exclude
+    @ToString.Exclude
+    private Collection<OTP> otpCollection;
 }

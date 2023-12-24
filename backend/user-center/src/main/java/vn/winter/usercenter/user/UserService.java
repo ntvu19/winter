@@ -6,12 +6,16 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import vn.winter.usercenter.otp.OTP;
+import vn.winter.usercenter.otp.OtpRepository;
 import vn.winter.usercenter.user.dto.UserSignInDto;
 import vn.winter.usercenter.user.dto.UserSignUpDto;
+import vn.winter.usercenter.util.OtpType;
 import vn.winter.usercenter.util.ResponseMap;
 import vn.winter.usercenter.util.Util;
 
-import java.util.Date;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -19,6 +23,8 @@ import java.util.List;
     public class UserService {
         @Autowired
         private UserRepository userRepository;
+        @Autowired
+        private OtpRepository otpRepository;
         @Autowired
         private PasswordEncoder passwordEncoder;
         private final ResponseMap responseMap;
@@ -35,9 +41,7 @@ import java.util.List;
 
         /**
          * NOTE:
-         * - OTP
-         * - Active status
-         * - Birthday
+         * - Send email
          * - 500 try - catch - exception
          */
 
@@ -46,6 +50,7 @@ import java.util.List;
         String email = userSignUpDto.getEmail();
         String password = userSignUpDto.getPassword();
         String phone = userSignUpDto.getPhone();
+        LocalDate birthday = userSignUpDto.getBirthday();
 
         // Check null request
         if (email == null || email.isBlank()) {
@@ -59,14 +64,14 @@ import java.util.List;
         User checkedUser = this.userRepository.findOneByEmail(email);
 
         if (checkedUser != null) {
-            return new ResponseEntity<>(responseMap.setValue("message", "User exist!")
+            return new ResponseEntity<>(responseMap.setValue("message", "User is exist!")
                 .setValue("status", HttpStatus.BAD_REQUEST.value())
                 .build(),
                     HttpStatus.BAD_REQUEST);
         }
 
         // Generate random code
-        String randomSalt = Util.generateRandomSaltCode(16);
+        String randomSalt = Util.generateRandomSalt(16);
 
         // Hashing password + salt
         String hashedPassword = passwordEncoder.encode(password + randomSalt);
@@ -77,14 +82,30 @@ import java.util.List;
                 .email(email)
                 .password(hashedPassword)
                 .phone(phone)
+                .birthday(birthday)
                 .salt(randomSalt)
-                .planId(1L)                 // Default storage plan (FREE)
-                .createdAt(new Date())      // Set created time
-                .updatedAt(new Date())      // Set updated time
+                .planId(1L)                         // Default storage plan (FREE)
+                .createdAt(LocalDateTime.now())     // Set created time
+                .updatedAt(LocalDateTime.now())     // Set updated time
                 .build();
 
         // Save user to database
         this.userRepository.save(user);
+
+        // Generate register OTP
+        OTP otpEntity = OTP.builder()
+                .code(Util.generateRandomOtp(6))
+                .type(OtpType.REGISTER.toString())
+                .remainTime(5 * 60 * 1000)      // 5 minutes * 60 seconds * 1000 miliseconds
+                .expiredAt(LocalDateTime.now().plusMinutes(10))
+                .user(user)
+                .build();
+
+        // Save OTP to database
+        this.otpRepository.save(otpEntity);
+
+        // Send an email to user
+        // ...
 
         return new ResponseEntity<>(responseMap.setValue("message", "Success")
                 .setValue("data", UserMapper.getInstance().toDTO(user))

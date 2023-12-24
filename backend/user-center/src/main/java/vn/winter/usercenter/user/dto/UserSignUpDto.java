@@ -2,6 +2,7 @@ package vn.winter.usercenter.user.dto;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Past;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -9,6 +10,7 @@ import lombok.Setter;
 import vn.winter.usercenter.util.Util;
 
 import java.io.Serializable;
+import java.time.LocalDate;
 
 @Getter
 @Setter
@@ -27,6 +29,9 @@ public class UserSignUpDto implements Serializable {
 
     @NotBlank
     private String phone;
+
+    @Past
+    private LocalDate birthday;
 
     public void setFullName(String fullName) {
         this.fullName = Util.trim(fullName);

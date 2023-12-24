@@ -19,11 +19,13 @@ public class UserMapper {
         dto.setFullName(user.getFullName());
         dto.setEmail(user.getEmail());
         dto.setPhone(user.getPhone());
+        dto.setBirthday(user.getBirthday());
         dto.setAvatarUrl(user.getAvatarUrl());
         dto.setCreatedAt(user.getCreatedAt());
         dto.setUpdatedAt(user.getUpdatedAt());
         dto.setDeleted(user.isDeleted());
         dto.setBlocked(user.isBlocked());
+        dto.setActive(user.isActive());
 
         return dto;
     }
