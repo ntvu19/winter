@@ -1,5 +1,8 @@
 # Changelog
 
+## 2023 - 12 - 25
+- Add "is_used" field for "otp" table.
+
 ## 2023 - 12 - 24
 - Add "is_active" field for "users" table.
 - Add "birthday" field for "users" table.

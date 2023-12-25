@@ -27,10 +27,6 @@ public class Util {
     }
 
     public static String trim(String str) {
-        if (str != null) {
-            return str.trim();
-        } else {
-            return null;
-        }
+        return str == null ? null : str.trim();
     }
 }

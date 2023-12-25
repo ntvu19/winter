@@ -7,7 +7,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import vn.winter.usercenter.otp.OTP;
+import vn.winter.usercenter.otp.OtpMapper;
 import vn.winter.usercenter.otp.OtpRepository;
+import vn.winter.usercenter.user.dto.ActiveUserDto;
 import vn.winter.usercenter.user.dto.UserSignInDto;
 import vn.winter.usercenter.user.dto.UserSignUpDto;
 import vn.winter.usercenter.util.OtpType;
@@ -54,8 +56,9 @@ import java.util.List;
 
         // Check null request
         if (email == null || email.isBlank()) {
-            return new ResponseEntity<>(responseMap.setValue("message", "Email must not be empty!")
-                    .setValue("status", HttpStatus.BAD_REQUEST.value())
+            return new ResponseEntity<>(responseMap
+                    .setMessage("Email must not be empty!")
+                    .setStatus(HttpStatus.BAD_REQUEST.value())
                     .build(),
                         HttpStatus.BAD_REQUEST);
         }
@@ -64,10 +67,11 @@ import java.util.List;
         User checkedUser = this.userRepository.findOneByEmail(email);
 
         if (checkedUser != null) {
-            return new ResponseEntity<>(responseMap.setValue("message", "User is exist!")
-                .setValue("status", HttpStatus.BAD_REQUEST.value())
-                .build(),
-                    HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(responseMap
+                    .setMessage("User is exist!")
+                    .setStatus(HttpStatus.BAD_REQUEST.value())
+                    .build(),
+                        HttpStatus.BAD_REQUEST);
         }
 
         // Generate random code
@@ -96,7 +100,7 @@ import java.util.List;
         OTP otpEntity = OTP.builder()
                 .code(Util.generateRandomOtp(6))
                 .type(OtpType.REGISTER.toString())
-                .remainTime(5 * 60 * 1000)      // 5 minutes * 60 seconds * 1000 miliseconds
+                .remainTime(5 * 60)      // 5 minutes * 60 seconds
                 .expiredAt(LocalDateTime.now().plusMinutes(10))
                 .user(user)
                 .build();
@@ -107,9 +111,10 @@ import java.util.List;
         // Send an email to user
         // ...
 
-        return new ResponseEntity<>(responseMap.setValue("message", "Success")
-                .setValue("data", UserMapper.getInstance().toDTO(user))
-                .setValue("status", HttpStatus.CREATED.value())
+        return new ResponseEntity<>(responseMap
+                .setMessage("Success")
+                .setStatus(HttpStatus.CREATED.value())
+                .setData(UserMapper.getInstance().toDTO(user))
                 .build(),
                     HttpStatus.CREATED);
     }
@@ -130,8 +135,8 @@ import java.util.List;
         // Check the email is blank
         if (email == null || email.isBlank()) {
             return new ResponseEntity<>(responseMap
-                    .setValue("message", "Email or password must not be empty!")
-                    .setValue("status", HttpStatus.BAD_REQUEST.value())
+                    .setMessage("Email or password must not be empty!")
+                    .setStatus(HttpStatus.BAD_REQUEST.value())
                     .build(),
                         HttpStatus.BAD_REQUEST);
         }
@@ -141,8 +146,8 @@ import java.util.List;
 
         if (user == null) {
             return new ResponseEntity<>(responseMap
-                    .setValue("message", "Email or password are wrong!")
-                    .setValue("status", HttpStatus.BAD_REQUEST.value())
+                    .setMessage("Email or password are wrong!")
+                    .setStatus(HttpStatus.BAD_REQUEST.value())
                     .build(),
                         HttpStatus.BAD_REQUEST);
         }
@@ -154,8 +159,8 @@ import java.util.List;
 
         if (!passwordEncoder.matches(rawPassword, encodedPassword)) {
             return new ResponseEntity<>(responseMap
-                    .setValue("message", "Email or password are wrong!")
-                    .setValue("status", HttpStatus.BAD_REQUEST.value())
+                    .setMessage("Email or password are wrong!")
+                    .setStatus(HttpStatus.BAD_REQUEST.value())
                     .build(),
                         HttpStatus.BAD_REQUEST);
         }
@@ -164,10 +169,114 @@ import java.util.List;
 
 
         return new ResponseEntity<>(responseMap
-                .setValue("message", "Success!")
-                .setValue("status", HttpStatus.OK.value())
-                .setValue("data", UserMapper.getInstance().toDTO(user))
+                .setMessage("Login successfully!")
+                .setStatus(HttpStatus.OK.value())
+                .setData(UserMapper.getInstance().toDTO(user))
                 .build(),
                     HttpStatus.OK);
     }
+
+    public ResponseEntity<Object> activeUser(ActiveUserDto activeUserDto) {
+        // Get parameters
+        String email = activeUserDto.getEmail();
+        String otp = activeUserDto.getOtp();
+
+        // Check empty email
+        if (email == null || email.isBlank()) {
+            return new ResponseEntity<>(responseMap
+                    .setMessage("Email must be not empty!")
+                    .setStatus(HttpStatus.BAD_REQUEST.value())
+                    .build(),
+                        HttpStatus.BAD_REQUEST);
+        }
+
+        // Check user in database
+        User user = this.userRepository.findOneByEmail(email);
+
+        if (user == null) {
+            return new ResponseEntity<>(responseMap
+                    .setMessage("User doesn't exist!")
+                    .setStatus(HttpStatus.NOT_FOUND.value())
+                    .build(),
+                        HttpStatus.NOT_FOUND);
+        }
+
+        // Check user has been activated
+        if (user.isActive()) {
+            return new ResponseEntity<>(responseMap
+                    .setMessage("User has been activated!")
+                    .setStatus(HttpStatus.BAD_REQUEST.value())
+                    .build(),
+                        HttpStatus.BAD_REQUEST);
+        }
+
+        // Check OTP has been used or has been expired
+        OTP checkedOtp = this.otpRepository.findOneByUserAndType(user, OtpType.REGISTER.toString());
+
+        if (checkedOtp == null)
+            return new ResponseEntity<>(responseMap
+                    .setMessage("OTP doesn't exist!")
+                    .setStatus(HttpStatus.NOT_FOUND.value())
+                    .build(),
+                        HttpStatus.NOT_FOUND);
+
+        if (checkedOtp.isUsed())
+            return new ResponseEntity<>(responseMap
+                    .setMessage("OTP has been used!")
+                    .setStatus(HttpStatus.GONE.value())
+                    .build(),
+                        HttpStatus.GONE);
+
+        if (checkedOtp.getExpiredAt().isBefore(LocalDateTime.now())) {
+            return new ResponseEntity<>(responseMap
+                    .setMessage("OTP has been expired!")
+                    .setStatus(HttpStatus.GONE.value())
+                    .build(),
+                        HttpStatus.GONE);
+        }
+
+        // Active user
+        if (checkedOtp.getCode().equals(otp)) {
+            // Set "is_active" to true
+            user.setActive(true);
+
+            // Set "is_used" to true
+            checkedOtp.setUsed(true);
+
+            // Save to database
+            this.userRepository.save(user);
+            this.otpRepository.save(checkedOtp);
+        }
+
+        return new ResponseEntity<>(responseMap
+                .setMessage("Activate user successfully!")
+                .setStatus(HttpStatus.OK.value())
+                .build(),
+                    HttpStatus.OK);
+    }
+
+    //
+
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

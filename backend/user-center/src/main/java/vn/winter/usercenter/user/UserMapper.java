@@ -13,20 +13,18 @@ public class UserMapper {
     }
 
     public UserDto toDTO(User user) {
-        UserDto dto = new UserDto();
-
-        dto.setUserId(user.getUserId());
-        dto.setFullName(user.getFullName());
-        dto.setEmail(user.getEmail());
-        dto.setPhone(user.getPhone());
-        dto.setBirthday(user.getBirthday());
-        dto.setAvatarUrl(user.getAvatarUrl());
-        dto.setCreatedAt(user.getCreatedAt());
-        dto.setUpdatedAt(user.getUpdatedAt());
-        dto.setDeleted(user.isDeleted());
-        dto.setBlocked(user.isBlocked());
-        dto.setActive(user.isActive());
-
-        return dto;
+        return UserDto.builder()
+                .userId(user.getUserId())
+                .fullName(user.getFullName())
+                .email(user.getEmail())
+                .phone(user.getPhone())
+                .birthday(user.getBirthday())
+                .avatarUrl(user.getAvatarUrl())
+                .createdAt(user.getCreatedAt())
+                .updatedAt(user.getUpdatedAt())
+                .isDeleted(user.isDeleted())
+                .isBlocked(user.isBlocked())
+                .isActive(user.isActive())
+                .build();
     }
 }

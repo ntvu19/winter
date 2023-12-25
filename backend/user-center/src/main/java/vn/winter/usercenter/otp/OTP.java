@@ -24,6 +24,8 @@ public class OTP {
     private int remainTime;
     @Column(name = "expired_at")
     private LocalDateTime expiredAt;
+    @Column(name = "is_used")
+    private boolean isUsed;
 
     @ManyToOne
     @JoinColumn(name = "user_id")

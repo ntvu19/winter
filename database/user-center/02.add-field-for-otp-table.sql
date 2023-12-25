@@ -1,0 +1,1 @@
+ALTER TABLE otp ADD COLUMN "is_used" boolean DEFAULT FALSE;
