@@ -10,6 +10,7 @@ import vn.winter.usercenter.otp.OTP;
 import vn.winter.usercenter.otp.OtpMapper;
 import vn.winter.usercenter.otp.OtpRepository;
 import vn.winter.usercenter.user.dto.ActiveUserDto;
+import vn.winter.usercenter.user.dto.ResendOtpDto;
 import vn.winter.usercenter.user.dto.UserSignInDto;
 import vn.winter.usercenter.user.dto.UserSignUpDto;
 import vn.winter.usercenter.util.OtpType;
@@ -68,7 +69,7 @@ import java.util.List;
 
         if (checkedUser != null) {
             return new ResponseEntity<>(responseMap
-                    .setMessage("User is exist!")
+                    .setMessage("User has been existed!")
                     .setStatus(HttpStatus.BAD_REQUEST.value())
                     .build(),
                         HttpStatus.BAD_REQUEST);
@@ -255,7 +256,72 @@ import java.util.List;
                     HttpStatus.OK);
     }
 
-    //
+    public ResponseEntity<Object> resendOTP(ResendOtpDto resendOtpDto) {
+        // Get parameter
+        String email = resendOtpDto.getEmail();
+        OtpType otpType = resendOtpDto.getOtpType();
+
+        // Check null request
+        if (email == null || email.isBlank()) {
+            return new ResponseEntity<>(responseMap
+                    .setMessage("Email is empty!")
+                    .setStatus(HttpStatus.BAD_REQUEST.value())
+                    .build(),
+                        HttpStatus.BAD_REQUEST);
+        }
+
+        // Check user exist
+        User user = this.userRepository.findOneByEmail(email);
+
+        if (user == null) {
+            return new ResponseEntity<>(responseMap
+                    .setMessage("User doesn't exist")
+                    .setStatus(HttpStatus.NOT_FOUND.value())
+                    .build(),
+                        HttpStatus.NOT_FOUND);
+        }
+
+        // Search OTP
+        OTP checkedOtp = this.otpRepository.findOneByUserAndType(user, otpType.toString());
+
+        if (checkedOtp != null) {
+            // Set new OTP code and expired time
+            checkedOtp.setCode(Util.generateRandomOtp(6));
+            checkedOtp.setRemainTime(5 * 60);
+            checkedOtp.setExpiredAt(LocalDateTime.now().plusMinutes(10));
+
+            // Update to database
+            this.otpRepository.save(checkedOtp);
+
+            // Response successful status
+            return new ResponseEntity<>(responseMap
+                    .setMessage("OTP has been re-created!")
+                    .setStatus(HttpStatus.OK.value())
+                    .setData(OtpMapper.getInstance().toDTO(checkedOtp))
+                    .build(),
+                        HttpStatus.OK);
+        }
+
+        // Re-create OTP
+        OTP otp = OTP.builder()
+                .code(Util.generateRandomOtp(6))
+                .type(otpType.toString())
+                .remainTime(5 * 60)
+                .expiredAt(LocalDateTime.now().plusMinutes(10))
+                .user(user)
+                .build();
+
+        // Save to database
+        this.otpRepository.save(otp);
+
+        // Response successful status
+        return new ResponseEntity<>(responseMap
+                .setMessage("OTP has been re-created!")
+                .setStatus(HttpStatus.OK.value())
+                .setData(OtpMapper.getInstance().toDTO(otp))
+                .build(),
+                    HttpStatus.OK);
+    }
 
 }
 

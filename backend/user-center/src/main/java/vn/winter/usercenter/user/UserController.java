@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import vn.winter.usercenter.user.dto.ActiveUserDto;
+import vn.winter.usercenter.user.dto.ResendOtpDto;
 import vn.winter.usercenter.user.dto.UserSignInDto;
 import vn.winter.usercenter.user.dto.UserSignUpDto;
 
@@ -40,7 +41,11 @@ public class UserController {
         return this.userService.activeUser(activeUserDto);
     }
 
-    // Re-send OTP
+    @PostMapping("/resend-otp")
+    public ResponseEntity<Object> resendOTP(@Valid @RequestBody ResendOtpDto resendOtpDto) {
+        return this.userService.resendOTP(resendOtpDto);
+    }
+
     // Forget password
     // Change password
     // Change information
