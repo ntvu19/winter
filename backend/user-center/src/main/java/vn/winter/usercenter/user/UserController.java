@@ -4,10 +4,7 @@ import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import vn.winter.usercenter.user.dto.ActiveUserDto;
-import vn.winter.usercenter.user.dto.ResendOtpDto;
-import vn.winter.usercenter.user.dto.UserSignInDto;
-import vn.winter.usercenter.user.dto.UserSignUpDto;
+import vn.winter.usercenter.user.dto.*;
 
 import java.util.List;
 
@@ -46,7 +43,11 @@ public class UserController {
         return this.userService.resendOTP(resendOtpDto);
     }
 
-    // Forget password
+    @PostMapping("forget-password")
+    public ResponseEntity<Object> forgetPassword(@Valid @RequestBody ForgetPasswordDto forgetPasswordDto) {
+        return this.userService.forgetPassword(forgetPasswordDto);
+    }
+
     // Change password
     // Change information
     // ...

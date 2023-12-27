@@ -9,10 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 import vn.winter.usercenter.otp.OTP;
 import vn.winter.usercenter.otp.OtpMapper;
 import vn.winter.usercenter.otp.OtpRepository;
-import vn.winter.usercenter.user.dto.ActiveUserDto;
-import vn.winter.usercenter.user.dto.ResendOtpDto;
-import vn.winter.usercenter.user.dto.UserSignInDto;
-import vn.winter.usercenter.user.dto.UserSignUpDto;
+import vn.winter.usercenter.user.dto.*;
 import vn.winter.usercenter.util.OtpType;
 import vn.winter.usercenter.util.ResponseMap;
 import vn.winter.usercenter.util.Util;
@@ -20,6 +17,7 @@ import vn.winter.usercenter.util.Util;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 @Transactional
@@ -191,6 +189,15 @@ import java.util.List;
                         HttpStatus.BAD_REQUEST);
         }
 
+        // Check OTP is equal to "REGISTER"
+        if (!Objects.equals(otp, OtpType.REGISTER.toString())) {
+            return new ResponseEntity<>(responseMap
+                    .setMessage("OTP type must be REGISTER!")
+                    .setStatus(HttpStatus.BAD_REQUEST.value())
+                    .build(),
+                        HttpStatus.BAD_REQUEST);
+        }
+
         // Check user in database
         User user = this.userRepository.findOneByEmail(email);
 
@@ -221,20 +228,12 @@ import java.util.List;
                     .build(),
                         HttpStatus.NOT_FOUND);
 
-        if (checkedOtp.isUsed())
+        if (checkedOtp.isUsed() || checkedOtp.getExpiredAt().isBefore(LocalDateTime.now()))
             return new ResponseEntity<>(responseMap
-                    .setMessage("OTP has been used!")
+                    .setMessage("OTP has been used or has been expired!")
                     .setStatus(HttpStatus.GONE.value())
                     .build(),
                         HttpStatus.GONE);
-
-        if (checkedOtp.getExpiredAt().isBefore(LocalDateTime.now())) {
-            return new ResponseEntity<>(responseMap
-                    .setMessage("OTP has been expired!")
-                    .setStatus(HttpStatus.GONE.value())
-                    .build(),
-                        HttpStatus.GONE);
-        }
 
         // Active user
         if (checkedOtp.getCode().equals(otp)) {
@@ -323,6 +322,92 @@ import java.util.List;
                     HttpStatus.OK);
     }
 
+    public ResponseEntity<Object> forgetPassword(ForgetPasswordDto forgetPasswordDto) {
+        // Get parameters
+        String email = forgetPasswordDto.getEmail();
+        String otp = forgetPasswordDto.getOtp();
+        String password = forgetPasswordDto.getPassword();
+        String verifiedPassword = forgetPasswordDto.getVerifiedPassword();
+
+        // Check blank email
+        if (email == null || email.isBlank()) {
+            return new ResponseEntity<>(responseMap
+                    .setMessage("Email must not be empty!")
+                    .setStatus(HttpStatus.BAD_REQUEST.value())
+                    .build(),
+                        HttpStatus.BAD_REQUEST);
+        }
+
+        // Check password
+        if (!password.equals(verifiedPassword)) {
+            return new ResponseEntity<>(responseMap
+                    .setMessage("Password must be matched!")
+                    .setStatus(HttpStatus.BAD_REQUEST.value())
+                    .build(),
+                        HttpStatus.BAD_REQUEST);
+        }
+
+        // Check user
+        User checkedUser = this.userRepository.findOneByEmail(email);
+
+        if (checkedUser == null) {
+            return new ResponseEntity<>(responseMap
+                    .setMessage("User doesn't exist!")
+                    .setStatus(HttpStatus.NOT_FOUND.value())
+                    .build(),
+                        HttpStatus.NOT_FOUND);
+        }
+
+        // Check OTP type
+        OTP checkedOtp = this.otpRepository.findOneByUserAndType(checkedUser, OtpType.FORGET_PASSWORD.toString());
+
+        if (checkedOtp == null) {
+            return new ResponseEntity<>(responseMap
+                    .setMessage("OTP doesn't exist!")
+                    .setStatus(HttpStatus.NOT_FOUND.value())
+                    .build(),
+                        HttpStatus.NOT_FOUND);
+        }
+
+        // Check time and usage status
+        if (checkedOtp.isUsed() || checkedOtp.getExpiredAt().isBefore(LocalDateTime.now())) {
+            return new ResponseEntity<>(responseMap
+                    .setMessage("OTP has been used or has been expired!")
+                    .setStatus(HttpStatus.GONE.value())
+                    .build(),
+                        HttpStatus.GONE);
+        }
+
+        // Check matched OTP
+        if (!checkedOtp.getCode().equals(otp)) {
+            return new ResponseEntity<>(responseMap
+                    .setMessage("OTP is not correct!")
+                    .setStatus(HttpStatus.NOT_ACCEPTABLE.value())
+                    .build(),
+                        HttpStatus.NOT_ACCEPTABLE);
+        }
+
+        // Hash password
+        String salt = checkedUser.getSalt();
+        String hashedPassword = passwordEncoder.encode(password + salt);
+
+        // Reset password
+        checkedOtp.setUsed(true);
+        checkedUser.setPassword(hashedPassword);
+
+        // Save to database
+        this.userRepository.save(checkedUser);
+        this.otpRepository.save(checkedOtp);
+
+        // Response
+        return new ResponseEntity<>(responseMap
+                .setMessage("Your password has been reset!")
+                .setStatus(HttpStatus.OK.value())
+                .build(),
+                    HttpStatus.OK);
+    }
+
+    //
 }
 
 

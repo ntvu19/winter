@@ -5,14 +5,14 @@ import vn.winter.usercenter.user.dto.UserDto;
 public class UserMapper {
     private static UserMapper INSTANCE;
 
-    public static UserMapper getInstance() {
-        if (INSTANCE == null) {
-            INSTANCE = new UserMapper();
+        public static UserMapper getInstance() {
+            if (INSTANCE == null) {
+                INSTANCE = new UserMapper();
+            }
+            return INSTANCE;
         }
-        return INSTANCE;
-    }
 
-    public UserDto toDTO(User user) {
+        public UserDto toDTO(User user) {
         return UserDto.builder()
                 .userId(user.getUserId())
                 .fullName(user.getFullName())
