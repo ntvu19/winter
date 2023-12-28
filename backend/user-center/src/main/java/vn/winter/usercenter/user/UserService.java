@@ -407,7 +407,69 @@ import java.util.Objects;
                     HttpStatus.OK);
     }
 
-    //
+    public ResponseEntity<Object> changePassword(ChangePasswordDto changePasswordDto) {
+        // Get parameters
+        String email = changePasswordDto.getEmail();
+        String oldPassword = changePasswordDto.getOldPassword();
+        String password = changePasswordDto.getPassword();
+        String verifiedPassword = changePasswordDto.getVerifiedPassword();
+
+        // Check empty email
+        if (email == null || email.isBlank()) {
+            return new ResponseEntity<>(responseMap
+                    .setMessage("Email must not be empty!")
+                    .setStatus(HttpStatus.BAD_REQUEST.value())
+                    .build(),
+                        HttpStatus.BAD_REQUEST);
+        }
+
+        // Check matched password
+        if (!password.equals(verifiedPassword)) {
+            return new ResponseEntity<>(responseMap
+                    .setMessage("Password must be matched!")
+                    .setStatus(HttpStatus.BAD_REQUEST.value())
+                    .build(),
+                        HttpStatus.BAD_REQUEST);
+        }
+
+        // Check user
+        User user = this.userRepository.findOneByEmail(email);
+
+        if (user == null) {
+            return new ResponseEntity<>(responseMap
+                    .setMessage("User doesn't exist!")
+                    .setStatus(HttpStatus.NOT_FOUND.value())
+                    .build(),
+                        HttpStatus.NOT_FOUND);
+        }
+
+        // Check old password
+        String salt = user.getSalt();
+        String encodedOldPassword = user.getPassword();
+
+        if (!passwordEncoder.matches(oldPassword + salt, encodedOldPassword)) {
+            return new ResponseEntity<>(responseMap
+                    .setMessage("Old password are wrong!")
+                    .setStatus(HttpStatus.BAD_REQUEST.value())
+                    .build(),
+                    HttpStatus.BAD_REQUEST);
+        }
+
+        // Hashing password
+        String hashedPassword = passwordEncoder.encode(password + salt);
+
+        // Change password
+        user.setPassword(hashedPassword);
+
+        // Save to database
+        this.userRepository.save(user);
+
+        return new ResponseEntity<>(responseMap
+                .setMessage("Password has been changed!")
+                .setStatus(HttpStatus.OK.value())
+                .build(),
+                    HttpStatus.OK);
+    }
 }
 
 

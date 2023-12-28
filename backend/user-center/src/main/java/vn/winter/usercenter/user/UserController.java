@@ -43,12 +43,16 @@ public class UserController {
         return this.userService.resendOTP(resendOtpDto);
     }
 
-    @PostMapping("forget-password")
+    @PatchMapping("/forget-password")
     public ResponseEntity<Object> forgetPassword(@Valid @RequestBody ForgetPasswordDto forgetPasswordDto) {
         return this.userService.forgetPassword(forgetPasswordDto);
     }
 
-    // Change password
+    @PatchMapping("/change-password")
+    public ResponseEntity<Object> changePassword(@Valid @RequestBody ChangePasswordDto changePasswordDto) {
+        return this.userService.changePassword(changePasswordDto);
+    }
+
     // Change information
     // ...
 
