@@ -3,6 +3,7 @@ package vn.winter.usercenter.user;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import vn.winter.usercenter.user.dto.*;
 
@@ -10,6 +11,7 @@ import java.util.List;
 
 @RestController()
 @RequestMapping("api/v1/user-center/user")
+@Validated
 public class UserController {
     @Autowired
     private final UserService userService;
@@ -53,7 +55,10 @@ public class UserController {
         return this.userService.changePassword(changePasswordDto);
     }
 
-    // Change information
-    // ...
+    @PatchMapping("/change-profile")
+    public ResponseEntity<Object> changeProfile(@Valid @RequestBody ChangeProfileDto changeProfileDto) {
+        return this.userService.changeProfile(changeProfileDto);
+    }
 
+    // ...
 }

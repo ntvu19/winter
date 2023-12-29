@@ -470,6 +470,16 @@ import java.util.Objects;
                 .build(),
                     HttpStatus.OK);
     }
+
+    public ResponseEntity<Object> changeProfile(ChangeProfileDto changeProfileDto) {
+        // Get parameters
+
+        return new ResponseEntity<>(responseMap
+                .setMessage("Your profile has been changed!")
+                .setStatus(HttpStatus.OK.value())
+                .build(),
+                    HttpStatus.OK);
+    }
 }
 
 
